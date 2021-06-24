@@ -35,8 +35,6 @@ const metadataHeaderBinarySuffix = "-Bin"
 const xForwardedFor = "X-Forwarded-For"
 const xForwardedHost = "X-Forwarded-Host"
 
-const RefreshTokenContextKey = "refresh-token"
-
 var (
 	// DefaultContextTimeout is used for gRPC call context.WithTimeout whenever a Grpc-Timeout inbound
 	// header isn't present. If the value is 0 the sent `context` will not have a timeout.
@@ -152,7 +150,6 @@ func annotateContext(ctx context.Context, mux *ServeMux, req *http.Request, rpcM
 
 // AuthorizationCheck check authorization from the request header
 func AuthorizationCheck(ctx context.Context, mux *ServeMux, req *http.Request, rpcMethodName string) (map[string]string, error) {
-	fmt.Println("AuthorizationCheck start")
 	for key, vals := range req.Header {
 		key = textproto.CanonicalMIMEHeaderKey(key)
 		for _, val := range vals {
