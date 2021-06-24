@@ -31,6 +31,7 @@ type ServeMux struct {
 	streamErrorHandler        StreamErrorHandlerFunc
 	routingErrorHandler       RoutingErrorHandlerFunc
 	disablePathLengthFallback bool
+	authorizationChecker      AuthorizationCheckFunc
 }
 
 // ServeMuxOption is an option that can be given to a ServeMux on construction.
@@ -144,6 +145,21 @@ func WithDisablePathLengthFallback() ServeMuxOption {
 	}
 }
 
+// AuthorizationCheckFunc checks authorization
+type AuthorizationCheckFunc func(string) (map[string]string, error)
+
+// DefaultAuthorizationChecker is used to pass http request headers to/from gRPC context. This adds permanent HTTP header
+func DefaultAuthorizationChecker(token string) (map[string]string, error) {
+	return nil, nil
+}
+
+// WithAuthorizationChecker returns a ServeMuxOption representing a AuthrizationChecker for incoming request to gateway.
+func WithAuthorizationChecker(fn AuthorizationCheckFunc) ServeMuxOption {
+	return func(mux *ServeMux) {
+		mux.authorizationChecker = fn
+	}
+}
+
 // NewServeMux returns a new ServeMux whose internal mapping is empty.
 func NewServeMux(opts ...ServeMuxOption) *ServeMux {
 	serveMux := &ServeMux{
@@ -167,6 +183,10 @@ func NewServeMux(opts ...ServeMuxOption) *ServeMux {
 		serveMux.outgoingHeaderMatcher = func(key string) (string, bool) {
 			return fmt.Sprintf("%s%s", MetadataHeaderPrefix, key), true
 		}
+	}
+
+	if serveMux.authorizationChecker == nil {
+		serveMux.authorizationChecker = DefaultAuthorizationChecker
 	}
 
 	return serveMux
